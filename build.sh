@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Yay shell scripting! This script builds a static version of
-# OpenSSL ${OPENSSL_VERSION} for iOS 5.1 that contains code for armv6, armv7 and i386.
+# OpenSSL ${OPENSSL_VERSION} for iOS 7.0 that contains code for armv6, armv7 and i386.
 
 set -x
 
@@ -9,9 +9,8 @@ set -x
 
 OPENSSL_VERSION="1.0.1c"
 
-DEVELOPER="/Applications/Xcode.app/Contents/Developer"
-
-SDK_VERSION="6.0"
+DEVELOPER=$(xcode-select -p)
+SDK_VERSION=$(xcrun -sdk iphoneos --show-sdk-version)
 
 IPHONEOS_PLATFORM="${DEVELOPER}/Platforms/iPhoneOS.platform"
 IPHONEOS_SDK="${IPHONEOS_PLATFORM}/Developer/SDKs/iPhoneOS${SDK_VERSION}.sdk"
@@ -56,16 +55,16 @@ mkdir include
 cp -r /tmp/openssl-${OPENSSL_VERSION}-i386/include/openssl include/
 
 mkdir lib
-lipo \
-	"/tmp/openssl-${OPENSSL_VERSION}-armv7/lib/libcrypto.a" \
-	"/tmp/openssl-${OPENSSL_VERSION}-armv7s/lib/libcrypto.a" \
-	"/tmp/openssl-${OPENSSL_VERSION}-i386/lib/libcrypto.a" \
-	-create -output lib/libcrypto.a
-lipo \
-	"/tmp/openssl-${OPENSSL_VERSION}-armv7/lib/libssl.a" \
-	"/tmp/openssl-${OPENSSL_VERSION}-armv7s/lib/libssl.a" \
-	"/tmp/openssl-${OPENSSL_VERSION}-i386/lib/libssl.a" \
-	-create -output lib/libssl.a
+xcrun lipo \
+   "/tmp/openssl-${OPENSSL_VERSION}-armv7/lib/libcrypto.a" \
+   "/tmp/openssl-${OPENSSL_VERSION}-armv7s/lib/libcrypto.a" \
+   "/tmp/openssl-${OPENSSL_VERSION}-i386/lib/libcrypto.a" \
+   -create -output lib/libcrypto.a
+xcrun lipo \
+   "/tmp/openssl-${OPENSSL_VERSION}-armv7/lib/libssl.a" \
+   "/tmp/openssl-${OPENSSL_VERSION}-armv7s/lib/libssl.a" \
+   "/tmp/openssl-${OPENSSL_VERSION}-i386/lib/libssl.a" \
+   -create -output lib/libssl.a
 
 rm -rf "/tmp/openssl-${OPENSSL_VERSION}-*"
 rm -rf "/tmp/openssl-${OPENSSL_VERSION}-*.log"
