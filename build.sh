@@ -9,17 +9,17 @@ set -x
 
 OPENSSL_VERSION="1.0.1c"
 
-DEVELOPER="/Applications/Xcode.app/Contents/Developer"
-
-SDK_VERSION="6.0"
+DEVELOPER=$(xcode-select --print-path)
+SDK_VERSION=$(xcrun -sdk iphoneos --show-sdk-version)
+SDK_VERSION_MIN=4.3
 
 IPHONEOS_PLATFORM="${DEVELOPER}/Platforms/iPhoneOS.platform"
 IPHONEOS_SDK="${IPHONEOS_PLATFORM}/Developer/SDKs/iPhoneOS${SDK_VERSION}.sdk"
-IPHONEOS_GCC="${IPHONEOS_PLATFORM}/Developer/usr/bin/gcc"
+IPHONEOS_GCC="${DEVELOPER}/usr/bin/gcc"
 
 IPHONESIMULATOR_PLATFORM="${DEVELOPER}/Platforms/iPhoneSimulator.platform"
 IPHONESIMULATOR_SDK="${IPHONESIMULATOR_PLATFORM}/Developer/SDKs/iPhoneSimulator${SDK_VERSION}.sdk"
-IPHONESIMULATOR_GCC="${IPHONESIMULATOR_PLATFORM}/Developer/usr/bin/gcc"
+IPHONESIMULATOR_GCC="${DEVELOPER}/usr/bin/gcc"
 
 # Clean up whatever was left from our previous build
 
@@ -39,7 +39,7 @@ build()
    ./Configure BSD-generic32 --openssldir="/tmp/openssl-${OPENSSL_VERSION}-${ARCH}" &> "/tmp/openssl-${OPENSSL_VERSION}-${ARCH}.log"
    perl -i -pe 's|static volatile sig_atomic_t intr_signal|static volatile int intr_signal|' crypto/ui/ui_openssl.c
    perl -i -pe "s|^CC= gcc|CC= ${GCC} -arch ${ARCH}|g" Makefile
-   perl -i -pe "s|^CFLAG= (.*)|CFLAG= -isysroot ${SDK} \$1|g" Makefile
+   perl -i -pe "s|^CFLAG= (.*)|CFLAG= -isysroot ${SDK} -miphoneos-version-min=${SDK_VERSION_MIN} \$1|g" Makefile
    make &> "/tmp/openssl-${OPENSSL_VERSION}-${ARCH}.log"
    make install &> "/tmp/openssl-${OPENSSL_VERSION}-${ARCH}.log"
    popd
@@ -56,12 +56,12 @@ mkdir include
 cp -r /tmp/openssl-${OPENSSL_VERSION}-i386/include/openssl include/
 
 mkdir lib
-lipo \
+xcrun lipo \
 	"/tmp/openssl-${OPENSSL_VERSION}-armv7/lib/libcrypto.a" \
 	"/tmp/openssl-${OPENSSL_VERSION}-armv7s/lib/libcrypto.a" \
 	"/tmp/openssl-${OPENSSL_VERSION}-i386/lib/libcrypto.a" \
 	-create -output lib/libcrypto.a
-lipo \
+xcrun lipo \
 	"/tmp/openssl-${OPENSSL_VERSION}-armv7/lib/libssl.a" \
 	"/tmp/openssl-${OPENSSL_VERSION}-armv7s/lib/libssl.a" \
 	"/tmp/openssl-${OPENSSL_VERSION}-i386/lib/libssl.a" \
